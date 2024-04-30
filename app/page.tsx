@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { checkIfFileExists } from '@/serverFunctions/handleFiles';
 import path from "path"
+import ChildEl from '@/components/childEl/ChildEl';
 
 type userComponent = {
     id: string,
@@ -16,11 +17,14 @@ export default function Page() {
     const [componentProps, componentPropsSet] = useState<{ [key: string]: {} }>({
         "first": {
             text1: "hey max working props",
-            text2: "Wooo!"
+            text2: "Wooo!",
         },
         "second": {
             text1: "nice job",
             text2: "clean!"
+        },
+        "third": {
+            childEl: <ChildEl />
         }
     })
 
@@ -32,13 +36,16 @@ export default function Page() {
                     id: "first",
                     name: 'RecreateThis',
                     fileEnding: ".tsx",
-                    component: undefined
                 },
                 {
                     id: "second",
                     name: 'RecreateThis',
                     fileEnding: ".tsx",
-                    component: undefined
+                },
+                {
+                    id: "third",
+                    name: 'NavEl',
+                    fileEnding: ".tsx",
                 }
             ]
 
