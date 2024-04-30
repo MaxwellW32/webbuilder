@@ -4,14 +4,25 @@ import dynamic from 'next/dynamic';
 import { checkIfFileExists } from '@/serverFunctions/handleFiles';
 import path from "path"
 
-export default function Page() {
-    type userComponent = {
-        id: string,
-        name: string,
-        component: React.ComponentType<{}> | undefined
-    }
+type userComponent = {
+    id: string,
+    name: string,
+    component: React.ComponentType<{}> | undefined
+}
 
+export default function Page() {
     const [userComponents, userComponentsSet] = useState<userComponent[]>([]);
+
+    const [componentProps, componentPropsSet] = useState<{ [key: string]: {} }>({
+        "first": {
+            text1: "hey max working props",
+            text2: "Wooo!"
+        },
+        "second": {
+            text1: "nice job",
+            text2: "clean!"
+        }
+    })
 
     //load up components
     useEffect(() => {
@@ -54,21 +65,9 @@ export default function Page() {
         startOff()
     }, [])
 
-    const [componentProps, componentPropsSet] = useState<{ [key: string]: {} }>({
-        "first": {
-            text1: "hey max working props",
-            text2: "Wooo!"
-        },
-        "second": {
-            text1: "nice job",
-            text2: "clean!"
-        }
-    })
-
     return (
         <div>
             {userComponents.map((eachComponent, eachComponentIndex) => {
-
                 const props = componentProps[eachComponent.id]
                 const component = eachComponent.component ? <eachComponent.component {...props} /> : <div>Component not found</div>
 
