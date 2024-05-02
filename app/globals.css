@@ -3,6 +3,128 @@
 @tailwind utilities;
 
 :root {
-  --primaryColor: red;
+  --primaryColor: pink;
+  --secondaryColor: #003984;
+  --successColor: #048400;
+  --errorColor: #841200;
+  --largeFontSize: 2rem;
+  --mediumFontSize: 1.3rem;
+  --smallFontSize: .7rem;
+  --gray1: #777;
+  --gray2: #c0c0c0;
+}
 
+*,
+*::before,
+*::after {
+  border: 1px solid red !important;
+}
+
+label {
+  font-weight: bold;
+  text-transform: capitalize;
+}
+
+input,
+textarea {
+  padding: 1rem;
+  background-color: #fff;
+  border-radius: .2rem;
+  border: 1px solid #ddd;
+}
+
+input:focus,
+textarea:focus {
+  outline: none;
+}
+
+
+section {
+  padding: 2rem 1rem;
+}
+
+
+
+svg {
+  width: 1rem;
+  aspect-ratio: 1/1;
+  fill: #fff;
+}
+
+
+
+h1 {
+  font-size: var(--largeFontSize);
+  font-weight: bold;
+}
+
+h2 {
+  font-size: var(--mediumFontSize);
+}
+
+h3 {
+  font-weight: bold;
+}
+
+
+
+
+
+
+.mainButton {
+  background-color: #000;
+  border-radius: .5rem;
+  text-transform: capitalize;
+  color: #fff;
+  padding: 1rem 2rem;
+  transition: filter 400ms;
+  cursor: pointer
+}
+
+.mainButton:disabled {
+  opacity: .8;
+}
+
+.smallButton {
+  background-color: var(--gray1);
+  text-transform: capitalize;
+  color: #fff;
+  padding: .5rem 1rem;
+  font-size: var(--smallFontSize);
+  cursor: pointer
+}
+
+.closeButton {
+  background-color: #000;
+  text-transform: capitalize;
+  color: #fff;
+  padding: .5rem 1rem;
+  font-size: var(--smallFontSize);
+  border-radius: .5rem;
+  cursor: pointer
+}
+
+
+.smallText {
+  font-size: var(--smallFontSize);
+}
+
+.noScrollBar::-webkit-scrollbar {
+  display: none;
+}
+
+
+.niceScrollbar::-webkit-scrollbar {
+  height: 5px;
+  width: 5px;
+  border-radius: 1rem;
+}
+
+.niceScrollbar::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 1rem;
+}
+
+.niceScrollbar::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }

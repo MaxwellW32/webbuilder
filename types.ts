@@ -1,60 +1,38 @@
 import { z } from "zod";
 
-export type fileType = { [key: string]: string }//page.tsx -- content: function(){}
-export type folderType = {
-    folderName: string,
-    children: (folderType | fileType)[]
-}
-export type layout = {
-    mainFile: string, //which component to load in program - page.tsx
-    collection: (fileType | folderType)[]
-}
+const collectionSchema = z.object({
+    relativePath: z.string().min(1),
+    content: z.string().min(1),
+})
+export type collection = z.infer<typeof collectionSchema>
 
-const firstLayout: layout = {
-    mainFile: "page.tsx",
-    collection: [
-        { "page.tsx": "function(){return (<div>hey there</div>)}" },
-        { "page.module.css": ".header{color: pink}" },
-        {
-            folderName: "folder",
-            children: [
-                { "page.module.css": ".header{color: pink}" }
-            ]
-        },
-    ]
-}
+const layoutSchema = z.object({
+    mainFileName: z.string().min(1),
+    collection: z.array(collectionSchema),
+})
+export type layout = z.infer<typeof layoutSchema>
 
-export const componentSchema = z.object({
+
+
+
+export const userComponentSchema = z.object({
     id: z.string().min(1),
     userId: z.number(),
     categoryId: z.number(),
     name: z.string().min(1),
     likes: z.number(),
     saves: z.number(),
-
-    currentLayout: z.object({
-        mainFile: z.string().min(1),
-        collection: z.array(z.any()).nullable(),
-    }),
-    nextLayout: z.object({
-        mainFile: z.string().min(1),
-        collection: z.array(z.any()).nullable(),
-    })
+    currentLayout: layoutSchema.nullable(),
+    nextLayout: layoutSchema.nullable()
 })
-export type component = Omit<z.infer<typeof componentSchema>, "currentLayout" | "nextLayout"> & {
-    currentLayout: layout | null;
-    nextLayout: layout | null;
-
+export type userComponent = z.infer<typeof userComponentSchema> & {
     fromUser?: user,
     fromCategory?: category,
     comments?: comment[]
 }
 
-export const newComponentSchema = componentSchema.omit({ id: true, likes: true, saves: true })
-export type newComponent = Omit<z.infer<typeof newComponentSchema>, "currentLayout" | "nextLayout"> & {
-    currentLayout: layout | null;
-    nextLayout: layout | null;
-}
+export const newComponentSchema = userComponentSchema.omit({ likes: true, saves: true, currentLayout: true })
+export type newComponent = z.infer<typeof newComponentSchema>
 
 
 
@@ -70,7 +48,7 @@ export const usersSchema = z.object({
     username: z.string().min(1),
 })
 export type user = z.infer<typeof usersSchema> & {
-    componentsAdded?: component[],
+    componentsAdded?: userComponent[],
     usersToLikedComments?: usersToLikedComments[]
 }
 
@@ -89,7 +67,7 @@ export const categoriesSchema = z.object({
     name: z.string().min(1),
 })
 export type category = z.infer<typeof categoriesSchema> & {
-    components?: component[]
+    components?: userComponent[]
 }
 
 export const newCategoriesSchema = categoriesSchema.omit({ id: true })
@@ -115,7 +93,7 @@ export const commentsSchema = z.object({
 })
 export type comment = z.infer<typeof commentsSchema> & {
     fromUser?: user,
-    fromComponent?: component,
+    fromComponent?: userComponent,
     usersToLikedComments?: usersToLikedComments[]
 }
 

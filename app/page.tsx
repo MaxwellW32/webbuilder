@@ -3,16 +3,13 @@ import React, { useEffect, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { checkIfFileExists } from '@/serverFunctions/handleFiles';
 import path from "path"
-import ChildEl from '@/components/childEl/ChildEl';
-
-type userComponent = {
-    id: string,
-    name: string,
-    component: React.ComponentType<{}> | undefined
-}
+import { getUserComponents } from '@/serverFunctions/handleUserComponents';
+import { userComponent } from '@/types';
+import globalDynamicComponents from '@/utility/globalComponents';
 
 export default function Page() {
-    const [userComponents, userComponentsSet] = useState<userComponent[]>([]);
+    type builtComponent = (userComponent & { component: React.ComponentType<{}> | undefined })
+    const [userComponentsBuilt, userComponentsBuiltSet] = useState<builtComponent[]>([]);
 
     const [componentProps, componentPropsSet] = useState<{ [key: string]: {} }>({
         "first": {
@@ -22,59 +19,35 @@ export default function Page() {
         "second": {
             text1: "nice job",
             text2: "clean!"
-        },
-        "third": {
-            childEl: <ChildEl />
         }
     })
 
     //load up components
     useEffect(() => {
         const startOff = async () => {
-            const FileInfoArr = [
-                {
-                    id: "first",
-                    name: 'RecreateThis',
-                    fileEnding: ".tsx",
-                },
-                {
-                    id: "second",
-                    name: 'RecreateThis',
-                    fileEnding: ".tsx",
-                },
-                {
-                    id: "third",
-                    name: 'NavEl',
-                    fileEnding: ".tsx",
-                }
-            ]
+            const aprovedUserComponents = await getUserComponents()
 
-            const newArr = await Promise.all(FileInfoArr.map(async eachFileInfoObj => {
-                const componentExists = await checkIfFileExists(path.join("userComponents", eachFileInfoObj.id, `${eachFileInfoObj.name}${eachFileInfoObj.fileEnding}`))
+            const newBuiltComponents: builtComponent[] = await Promise.all(aprovedUserComponents.map(async eachComponent => {
+                const fullPath = path.join("userComponents", eachComponent.currentLayout!.mainFileName)
 
-                if (componentExists) {
-                    return {
-                        id: eachFileInfoObj.id,
-                        name: eachFileInfoObj.name,
-                        component: dynamic(() => import(`@/userComponents/${eachFileInfoObj.id}/${eachFileInfoObj.name}`), { ssr: false })
-                    }
-                } else {
-                    return {
-                        id: eachFileInfoObj.id,
-                        name: eachFileInfoObj.name,
-                        component: undefined
-                    }
+                const Component = await globalDynamicComponents(fullPath)[eachComponent.id]()
+
+                return {
+                    ...eachComponent,
+                    component: Component
                 }
             }))
 
-            userComponentsSet(newArr)
+            userComponentsBuiltSet(newBuiltComponents)
         }
         startOff()
     }, [])
 
     return (
         <div>
-            {userComponents.map((eachComponent, eachComponentIndex) => {
+            <p>Home page</p>
+
+            {userComponentsBuilt.map((eachComponent, eachComponentIndex) => {
                 const props = componentProps[eachComponent.id]
                 const component = eachComponent.component ? <eachComponent.component {...props} /> : <div>Component not found</div>
 

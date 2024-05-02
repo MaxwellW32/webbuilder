@@ -1,5 +1,6 @@
 "use server"
 import fs from "fs/promises"
+import path from "path"
 
 export async function checkIfFileExists(filePath: string) {
     try {
@@ -15,3 +16,7 @@ export async function checkIfFileExists(filePath: string) {
     }
 }
 
+
+
+
+//check for basefilename from path
