@@ -1,6 +1,3 @@
-import React from 'react'
-import styles from "./newLayout.module.css"
-
 type textOrder = {
     one?: string
     two?: string
@@ -24,16 +21,13 @@ type textOrder = {
     headingTen?: string
 }
 
-export default function NewLayout({ textOrder }: { textOrder: textOrder }) {
+export default function TextOrder({ textOrder }: { textOrder: textOrder }) {
     return (
         <div>
-            <div style={{ display: "flex", flexWrap: "wrap", height: "200px" }} className={styles.mainDiv}>
-                <div style={{ flex: "1 1 300px", backgroundColor: "red" }}>{textOrder["headingOne"]}</div>
-                <div style={{ flex: "1 1 300px", backgroundColor: "green" }}>{textOrder["headingTwo"]}</div>
-            </div>
+            <h1>{textOrder["headingOne"]}</h1>
 
             <div>
-                <p>More Paragraphs</p>
+                <h3>{textOrder["headingTwo"]}</h3>
 
                 <p>{textOrder["one"]}</p>
 

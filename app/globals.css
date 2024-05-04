@@ -17,7 +17,7 @@
 *,
 *::before,
 *::after {
-  border: 1px solid red !important;
+  /* border: 1px solid red !important; */
 }
 
 label {
@@ -85,6 +85,20 @@ h3 {
   opacity: .8;
 }
 
+.secondaryButton {
+  background-color: var(--secondaryColor);
+  border-radius: .5rem;
+  text-transform: capitalize;
+  color: #fff;
+  padding: 1rem 2rem;
+  transition: filter 400ms;
+  cursor: pointer
+}
+
+.secondaryButton:disabled {
+  opacity: .8;
+}
+
 .smallButton {
   background-color: var(--gray1);
   text-transform: capitalize;
@@ -109,6 +123,24 @@ h3 {
   font-size: var(--smallFontSize);
 }
 
+.smallButtonLink {
+  display: flex;
+  gap: .5rem;
+  justify-content: center;
+  cursor: pointer;
+  font-size: var(--smallFontSize);
+  transition: color 50ms, fill 50ms;
+}
+
+.smallButtonLink * {
+  transition: color 50ms, fill 50ms;
+}
+
+.smallButtonLink:hover * {
+  color: grey;
+  fill: grey;
+}
+
 .noScrollBar::-webkit-scrollbar {
   display: none;
 }
@@ -127,4 +159,62 @@ h3 {
 
 .niceScrollbar::-webkit-scrollbar-thumb:hover {
   background: #555;
+}
+
+
+
+.snap {
+  scroll-snap-type: x mandatory;
+}
+
+.snap>* {
+  scroll-snap-align: start;
+}
+
+.userComponentHoverDiv {
+  position: absolute;
+  right: 1rem;
+  top: 1rem;
+}
+
+.userComponentInfo {
+  display: none;
+  gap: .5rem;
+
+}
+
+.userComponentHoverDiv:hover {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 100%;
+  background-color: #000;
+  color: #fff;
+  animation: fadeIn 1s both;
+  padding: 1rem;
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+.userComponentTriggerElement {
+  cursor: pointer;
+}
+
+.userComponentHoverDiv:hover>.userComponentTriggerElement {
+  display: none;
+}
+
+.userComponentHoverDiv:hover>.userComponentInfo {
+  display: grid;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
 }

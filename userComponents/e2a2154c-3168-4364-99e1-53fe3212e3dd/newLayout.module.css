@@ -1,0 +1,10 @@
+.mainDiv {}
+
+
+
+@media screen and (max-width: 600px) {
+    .mainDiv>div:nth-of-type(2) {
+        background-color: blue !important;
+    }
+
+}

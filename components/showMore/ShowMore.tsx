@@ -1,12 +1,18 @@
 "use client"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import styles from "./styles.module.css"
 
-export default function ShowMore({ label, content, svgColor, wantsToShowAll }: { label: string, content: JSX.Element, svgColor?: string, wantsToShowAll?: boolean }) {
+export default function ShowMore({ label, content, svgColor, wantsToShowAll, startShowing }: { label: string, content: JSX.Element, svgColor?: string, wantsToShowAll?: boolean, startShowing?: boolean }) {
     const [showing, showingSet] = useState(false)
 
+    //change Showing from above
+    useEffect(() => {
+        if (startShowing === undefined) return
+        showingSet(startShowing)
+    }, [startShowing])
+
     return (
-        <div style={{ display: "grid" }}>
+        <div style={{ display: "grid" }} className={styles.mainDiv}>
             <div style={{ display: "flex", gap: ".5rem", alignItems: "center", cursor: "pointer", padding: "1rem" }} onClick={() => showingSet(prev => !prev)}>
                 <p>{label}</p>
 
