@@ -59,16 +59,20 @@ export default function Page() {
         search()
     }, [])
 
+
     const propsBeingUsed = useMemo<prop[] | null>(() => {
-        if (formObj.nextLayout === null) return null
+        if (formObj.nextLayout === null || !formObj.nextLayout.mainFileName) return null
 
         const foundProps: prop[] = []
+        const seenMainFileName = formObj.nextLayout.mainFileName
 
         formObj.nextLayout.collection.forEach(eachCollection => {
-            if (eachCollection.relativePath === formObj.nextLayout!.mainFileName) {
+            if (eachCollection.relativePath === seenMainFileName) {
 
                 props.forEach(eachProp => {
-                    if (eachCollection.content.includes(eachProp.name)) {
+                    const propNameRegex = new RegExp(`\\b${eachProp.name}\\b(?=\\s*\\})`);
+
+                    if (eachCollection.content.search(propNameRegex) > 0) {
                         foundProps.push(eachProp)
                     }
                 })
@@ -319,7 +323,20 @@ export default function Page() {
                             rule: "Import related components/styles locally E.g `./SecondComponent.tsx`"
                         },
                         {
-                            rule: "Ensure your component isn't influenced by global styles - all styling should come from inline styles / module.css files"
+                            rule: "Ensure your component isn't influenced by global styles - all styling should come from inline styles / module.css files",
+                            additionalText: "You can add the .noExternalStyles css class to ensure your design is consistent accross broswers",
+                            buttonInfo: {
+                                text: "Copy Class",
+                                onClick: () => {
+                                    navigator.clipboard.writeText(`
+                                    .noExternalStyles * {
+                                        all: unset;
+                                      }
+                                      `);
+
+                                    toast.success("class copied!")
+                                },
+                            }
                         },
                         {
                             rule: "Your component must be be resizable for all screen sizes - Desktop, Tablet, Mobile"
@@ -327,7 +344,17 @@ export default function Page() {
 
                     ].map((eachRule, eachRuleIndex) => {
                         return (
-                            <li key={eachRuleIndex}>{eachRule.rule}</li>
+                            <li key={eachRuleIndex}>
+                                {eachRule.rule}
+
+                                {eachRule.buttonInfo && (
+                                    <>
+                                        <p>{eachRule.additionalText}</p>
+
+                                        <button className='smallButton' onClick={eachRule.buttonInfo.onClick}>Copy Css Class</button>
+                                    </>
+                                )}
+                            </li>
                         )
                     })}
                 </ul>

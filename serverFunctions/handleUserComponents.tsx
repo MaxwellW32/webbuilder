@@ -1,6 +1,6 @@
 "use server"
 import { db } from "@/db";
-import { type collection, type userComponent, type layout, type newUserComponent, newUserComponentSchema, category } from "@/types";
+import { type collection, type userComponent, type layout, type newUserComponent, newUserComponentSchema, category, user } from "@/types";
 import { userComponents } from "@/db/schema";
 import { eq, isNotNull, isNull, and } from "drizzle-orm";
 import fs from "fs/promises"
@@ -61,6 +61,14 @@ export async function getUserComponents(getNeedsToBeApproved = false, seenLimit 
 
         return results
     }
+}
+export async function getSpecificUserComponent(userComponentsId: Pick<userComponent, "id">): Promise<userComponent | undefined> {
+    const result = await db.query.userComponents.findFirst({
+        where: eq(userComponents.id, userComponentsId.id)
+    });
+
+    return result
+
 }
 
 export async function getUserComponentsFromCategory(categoryId: Pick<category, "id">, seenLimit = 50, seenOffset = 0): Promise<userComponent[]> {

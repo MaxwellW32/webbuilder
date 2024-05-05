@@ -27,7 +27,7 @@ type subSubMenuItem = {
 
 const navObjExample: navObj = {
     logo: <></>,
-    menuGraphic: <></>, //chevrons
+    menuGraphic: <></>,
     navButton: <></>,
     menuItems: [
         {
@@ -83,6 +83,8 @@ export default function NavObj({ navObj }: { navObj: navObj }) {
                     )
                 })}
             </ul>
+
+            {navObj.navButton}
         </nav>
     )
 }

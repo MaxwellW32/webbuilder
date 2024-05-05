@@ -23,7 +23,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={`${inter.className} niceScrollbar`}>
         <SessionProvider session={session}>
           <Toaster position="top-center" reverseOrder={false} />
           {children}

@@ -14,7 +14,7 @@ export default async function buildUserComponents(userComponents: userComponent[
                 component: Component
             }
         } catch (error) {
-            console.log(`$err reading`, error);
+            console.log(`$err making build component`, error);
             return {
                 ...eachComponent,
                 component: undefined

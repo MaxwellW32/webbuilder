@@ -6,25 +6,32 @@ import React, { useEffect, useState } from 'react'
 import TextOrder from './propsTest/TextOrder'
 import TestComp from './TestComp'
 import NewLayout from '@/exampleDesignsToRemake/newFolder/NewLayout'
+import Element from './propsTest/element/Element'
+import MakeElement from '@/components/starters/MakeElement'
 
 export default function Page() {
     return (
         <main>
-            <section style={{ display: "grid" }}>
-                {/* <button className='mainButton' onClick={async () => {
-                    console.log(`$globalDynamicComponents("RecreateThis")`, await globalDynamicComponents("userComponents/b3cb6db0-0cf9-4649-842b-d36eec3951d8/RecreateThis.tsx")["b3cb6db0-0cf9-4649-842b-d36eec3951d8"]());
-                }}>Check</button> */}
+            {/* <div className='noExternalStyles'>
+                <Element element={<MakeElement elNumber={1} />} />
+            </div> */}
 
-                {/* <button className='mainButton' onClick={async () => {
-                    console.log(`$checkIfFileExists("/userComponents/b3cb6db0-0cf9-4649-842b-d36eec3951d8/RecreateThis.tsx")`, await checkIfFileExists("userComponents/b3cb6db0-0cf9-4649-842b-d36eec3951d8/RecreateThis.tsx"));
-                }}>Check if file exists</button> */}
-
-                {/* <button className='mainButton' onClick={async () => {
-                    console.log(`$getPathBaseName`, getPathBaseName(`userComponents/b3cb6db0-0cf9-4649-842b-d36eec3951d8/RecreateThis.tsx`));
-                }}>Get base name</button> */}
-
-                <NewLayout textOrder={{}} />
-            </section>
+            <ExampleComp>
+                <div style={{ backgroundColor: "#fff", padding: "3rem" }}>Child Element</div>
+            </ExampleComp>
         </main>
     )
+}
+
+
+function ExampleComp({ children }: { children: React.ReactNode }) {
+
+    return (
+        <div style={{ backgroundColor: "green", display: "grid", justifyItems: "center" }}>
+            <p>Parent Element Above</p>
+            {children}
+            <p>Parent Element Below</p>
+        </div>
+    )
+
 }
