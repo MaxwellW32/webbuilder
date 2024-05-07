@@ -3,15 +3,23 @@
 @tailwind utilities;
 
 :root {
-  --primaryColor: pink;
-  --secondaryColor: #003984;
+  --color1: #8ecae6;
+  --color2: #219ebc;
+  --color3: #023047;
+  --color4: #ffb703;
+  --color5: #fb8500;
+
+  --blackSwitch: #000;
+  --whiteSwitch: #fff;
+
   --successColor: #048400;
   --errorColor: #841200;
-  --largeFontSize: 2rem;
-  --mediumFontSize: 1.3rem;
-  --smallFontSize: .7rem;
+
   --gray1: #777;
   --gray2: #c0c0c0;
+
+  --largeFontSize: 1.5rem;
+  --smallFontSize: .7rem;
 }
 
 *,
@@ -28,9 +36,10 @@ label {
 input,
 textarea {
   padding: 1rem;
-  background-color: #fff;
+  background-color: var(--whiteSwitch);
+  color: var(--blackSwitch);
   border-radius: .2rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--blackSwitch);
 }
 
 input:focus,
@@ -48,18 +57,46 @@ section {
 svg {
   width: 1rem;
   aspect-ratio: 1/1;
-  fill: #fff;
+  fill: var(--whiteSwitch);
+  cursor: pointer;
+  scale: 1;
+  transition: scale 400ms;
 }
 
+svg:hover {
+  scale: 1.1;
+}
+
+.closeSvg>svg {
+  fill: var(--color4);
+  width: 2rem;
+  transition: fill 400ms, rotate 200ms;
+}
+
+.closeSvg:hover>svg {
+  fill: var(--color5);
+}
 
 
 h1 {
   font-size: var(--largeFontSize);
   font-weight: bold;
+  font-family: roboto;
 }
 
 h2 {
-  font-size: var(--mediumFontSize);
+  font-family: inter;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+h2>.tag {
+  padding: .5rem 1rem;
+  border-radius: .3rem;
+  background-color: var(--color4);
+  margin-right: .5rem;
+  font-weight: normal;
+  color: var(--whiteSwitch);
 }
 
 h3 {
@@ -71,52 +108,63 @@ h3 {
 
 
 
+button:disabled {
+  opacity: .8;
+}
+
 .mainButton {
-  background-color: #000;
-  border-radius: .5rem;
-  text-transform: capitalize;
+  cursor: pointer;
+  background-color: var(--color5);
+  text-transform: uppercase;
   color: #fff;
   padding: 1rem 2rem;
-  transition: filter 400ms;
-  cursor: pointer
+  transition: background-color 200ms, scale 200ms;
+  justify-self: center;
+  font-weight: bold;
+  border: 2px solid transparent;
+  scale: 1;
+  letter-spacing: 1px;
 }
 
-.mainButton:disabled {
-  opacity: .8;
+.mainButton:hover {
+  background-color: var(--color4);
+  border: 2px solid var(--whiteSwitch);
+  scale: 1.05;
 }
 
-.secondaryButton {
-  background-color: var(--secondaryColor);
-  border-radius: .5rem;
-  text-transform: capitalize;
-  color: #fff;
-  padding: 1rem 2rem;
-  transition: filter 400ms;
-  cursor: pointer
-}
-
-.secondaryButton:disabled {
-  opacity: .8;
-}
 
 .smallButton {
-  background-color: var(--gray1);
-  text-transform: capitalize;
+  /* settings buttons choice */
+  cursor: pointer;
+  justify-self: flex-start;
+  padding: .5rem .5rem;
+  background-color: var(--color3);
+  text-transform: uppercase;
   color: #fff;
-  padding: .5rem 1rem;
   font-size: var(--smallFontSize);
-  cursor: pointer
+  transition: background-color 200ms;
+  display: flex;
+  gap: .5rem;
 }
 
-.closeButton {
-  background-color: #000;
+.smallButton:hover {
+  /* settings buttons choice */
+  background-color: var(--color2);
+}
+
+.option {
+  /* option is list */
+  background-color: var(--blackSwitch);
   text-transform: capitalize;
-  color: #fff;
+  color: var(--whiteSwitch);
   padding: .5rem 1rem;
   font-size: var(--smallFontSize);
   border-radius: .5rem;
   cursor: pointer
 }
+
+
+
 
 
 .smallText {
@@ -174,15 +222,16 @@ h3 {
 
 
 .userComponentSelectButton {
-  position: absolute;
+  cursor: pointer;
+  /* position: absolute;
   right: 1rem;
   top: 1rem;
   cursor: pointer;
-  opacity: .5;
+  opacity: .5; */
 }
 
-.userComponentSelectButton:hover {
-  opacity: 1;
+.userComponentSelectButton>svg {
+  fill: var(--color3);
 }
 
 

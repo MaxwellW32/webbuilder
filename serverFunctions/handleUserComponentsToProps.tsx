@@ -29,3 +29,12 @@ export async function removePropFromUserComponent(propId: Pick<prop, "id">, user
     await db.delete(userComponentsToProps).where(and(eq(userComponentsToProps.propId, propId.id), eq(userComponentsToProps.userComponentId, userComponentId.id)));
 }
 
+export async function getPropsFromUserComponent(userComponentId: Pick<userComponent, "id">) {
+    userComponentSchema.pick({ id: true }).parse(userComponentId)
+
+    const results = await db.query.userComponentsToProps.findMany({
+        where: eq(userComponentsToProps.userComponentId, userComponentId.id)
+    })
+
+    return results
+}

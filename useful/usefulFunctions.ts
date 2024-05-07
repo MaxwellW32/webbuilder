@@ -1,15 +1,11 @@
 import path from "path"
 
-export function replaceBaseFolderNameInPath(firstParam: string, filePath: string) {
-    const pathObj = path.parse(filePath);
+export function replaceBaseFolderNameInPath(stringToReplaceWith: string, filePath: string) {
+    const splitArr = filePath.split(/[\/\\]/)
+    splitArr[0] = stringToReplaceWith
+    const finalPath = splitArr.join("/")
 
-    // Replace the first folder name with an id
-    pathObj.dir = path.join(firstParam, ...pathObj.dir.split(path.sep).slice(1));
-
-    // Format the modified path object back to a file path
-    const modifiedPath = normalizeFilePathToForwardSlashes(path.format(pathObj));
-
-    return modifiedPath
+    return finalPath
 }
 
 export function getPathBaseName(filePath: string) {

@@ -1,0 +1,10 @@
+.main {
+    color: "#000"
+}
+
+
+@media only screen and (max-width: 400px) {
+    .main {
+        color: pink;
+    }
+}

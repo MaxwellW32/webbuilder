@@ -1,8 +1,8 @@
 "use server"
 import { db } from "@/db";
-import { type collection, type userComponent, type layout, type newUserComponent, newUserComponentSchema, category, user } from "@/types";
+import { type collection, type userComponent, type layout, type newUserComponent, newUserComponentSchema, category, user, userComponentSchema } from "@/types";
 import { userComponents } from "@/db/schema";
-import { eq, isNotNull, isNull, and } from "drizzle-orm";
+import { eq, isNotNull, isNull, and, desc } from "drizzle-orm";
 import fs from "fs/promises"
 import path from "path"
 import { v4 as uuidV4 } from "uuid"
@@ -28,20 +28,49 @@ export async function addUserComponent(userSubmittedNewComponent: newUserCompone
     if (!finalNewComponent.nextLayout) throw new Error("now layout submitted")
 
     //rename basename for main folder
-    finalNewComponent.nextLayout.mainFileName = replaceBaseFolderNameInPath(id, finalNewComponent.nextLayout.mainFileName)
+    finalNewComponent.nextLayout.mainFileName = replaceBaseFolderNameInPath(id, finalNewComponent.nextLayout.mainFileName)// newDesign/NewDesign.tsx
 
     //change base in  collection paths to be from the id
-    const newLayoutCollection = finalNewComponent.nextLayout.collection.map(eachCollection => {
+    //write new base path collection to nextLayout
+    finalNewComponent.nextLayout.collection = finalNewComponent.nextLayout.collection.map(eachCollection => {
         eachCollection.relativePath = replaceBaseFolderNameInPath(id, eachCollection.relativePath)
         return eachCollection
     })
 
-    //write new base path collection to nextLayout
-    finalNewComponent.nextLayout.collection = newLayoutCollection
-
     const [result] = await db.insert(userComponents).values(finalNewComponent).returning();
 
     return result
+}
+
+export async function updateUserComponent(seenUserComponent: Partial<userComponent>) {
+    const session = await getServerSession(authOptions)
+    if (!session) throw new Error("not signed in")
+
+    if (seenUserComponent.id === undefined || seenUserComponent.userId === undefined) throw new Error("Values not supplied for id or userid")
+
+    if (session.user.role !== "admin" && seenUserComponent.userId !== session.user.id) throw new Error("Not correct user to update this component")
+
+    userComponentSchema.partial().parse(seenUserComponent)
+
+    //rename base name
+    if (seenUserComponent.nextLayout) {
+        //rename basename for main folder
+        seenUserComponent.nextLayout.mainFileName = replaceBaseFolderNameInPath(seenUserComponent.id, seenUserComponent.nextLayout.mainFileName)// newDesign/NewDesign.tsx
+
+        //change base in  collection paths to be from the id
+        //write new base path collection to nextLayout
+        seenUserComponent.nextLayout.collection = seenUserComponent.nextLayout.collection.map(eachCollection => {
+            eachCollection.relativePath = replaceBaseFolderNameInPath(seenUserComponent.id!, eachCollection.relativePath)
+            return eachCollection
+        })
+    }
+
+
+    await db.update(userComponents)
+        .set({
+            ...seenUserComponent
+        })
+        .where(eq(userComponents.id, seenUserComponent.id));
 }
 
 export async function getUserComponents(getNeedsToBeApproved = false, seenLimit = 50, seenOffset = 0): Promise<userComponent[]> {
@@ -62,6 +91,7 @@ export async function getUserComponents(getNeedsToBeApproved = false, seenLimit 
         return results
     }
 }
+
 export async function getSpecificUserComponent(userComponentsId: Pick<userComponent, "id">): Promise<userComponent | undefined> {
     const result = await db.query.userComponents.findFirst({
         where: eq(userComponents.id, userComponentsId.id)
@@ -81,6 +111,16 @@ export async function getUserComponentsFromCategory(categoryId: Pick<category, "
     return results
 }
 
+export async function getUserComponentsFromUser(userId: Pick<user, "id">, seenLimit = 50, seenOffset = 0): Promise<userComponent[]> {
+    const results = await db.query.userComponents.findMany({
+        limit: seenLimit,
+        offset: seenOffset,
+        where: eq(userComponents.userId, userId.id),
+    });
+
+    return results
+}
+
 export async function acceptUserComponent(component: userComponent) {
     //use next layout 
     const currentLayout = component.nextLayout
@@ -88,7 +128,6 @@ export async function acceptUserComponent(component: userComponent) {
 
     //write files to userfolder
     await recreateComponentFolderStructure(currentLayout.collection, "userComponents")
-
 
     //update the globalcomponents obj
     await appendGlobalComponentsFile(component.id)
@@ -109,18 +148,18 @@ export async function recreateComponentFolderStructure(collection: collection[],
 
     await Promise.all(
         collection.map(async eachCollection => {
-            // Construct the absolute path of the file
             const filePath = path.join(basePath, eachCollection.relativePath);
             const folderPath = path.dirname(filePath);
 
             try {
                 // Create the folder if it doesn't exist
                 await fs.mkdir(folderPath, { recursive: true });
+                console.log(`$made directory`, folderPath);
 
                 // Write the file to the correct path
                 await fs.writeFile(filePath, eachCollection.content);
+                console.log(`wrote the file: ${filePath}`);
 
-                console.log(`Created file: ${filePath}`);
             } catch (err) {
                 console.error(`Error creating file ${filePath}: ${err}`);
             }

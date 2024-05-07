@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Roboto } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import SessionProvider from "@/components/session-provider";
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
+import NavClientWrapper from "@/components/NavClientWrapper";
+import AtomLoader from "@/utility/AtomLoader";
+import { getSpecificUser } from "@/serverFunctions/handleUsers";
 
 const inter = Inter({ subsets: ["latin"] });
+const roboto = Roboto({ subsets: ["latin"], weight: "400" });
 
 export const metadata: Metadata = {
   title: "Web Builder",
@@ -20,10 +24,11 @@ export default async function RootLayout({
 }>) {
   const session = await getServerSession(authOptions)
 
-
   return (
     <html lang="en">
-      <body className={`${inter.className} niceScrollbar`}>
+      <body className={`${inter.className} ${roboto.className} niceScrollbar`}>
+        <AtomLoader />
+        <NavClientWrapper user={session ? await getSpecificUser(session.user.id, "id") : undefined} />
         <SessionProvider session={session}>
           <Toaster position="top-center" reverseOrder={false} />
           {children}

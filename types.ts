@@ -23,10 +23,11 @@ export const userComponentSchema = z.object({
     userId: z.string().min(1),
     categoryId: z.number(),
     name: z.string().min(1),
+    nextLayout: layoutSchema.nullable(),
+
     likes: z.number(),
     saves: z.number(),
     currentLayout: layoutSchema.nullable(),
-    nextLayout: layoutSchema.nullable()
 })
 export type userComponent = z.infer<typeof userComponentSchema> & {
     fromUser?: user,
