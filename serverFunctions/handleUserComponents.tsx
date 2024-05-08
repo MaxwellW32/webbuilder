@@ -9,6 +9,7 @@ import { v4 as uuidV4 } from "uuid"
 import { replaceBaseFolderNameInPath } from "@/useful/usefulFunctions";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { deleteDirectory } from "./handleFiles";
 
 //remedy when users working
 export async function addUserComponent(userSubmittedNewComponent: newUserComponent): Promise<userComponent> {
@@ -92,6 +93,17 @@ export async function getUserComponents(getNeedsToBeApproved = false, seenLimit 
     }
 }
 
+export async function deleteUserComponent(userComponentId: Pick<userComponent, "id" | "userId">,) {
+    const session = await getServerSession(authOptions)
+    if (!session) throw new Error("not signed in")
+
+    if (session.user.role !== "admin" && session.user.id !== userComponentId.userId) throw new Error("no authority to delete post")
+
+    userComponentSchema.pick({ id: true, userId: true }).parse(userComponentId)
+
+    await db.delete(userComponents).where(eq(userComponents.id, userComponentId.id));
+}
+
 export async function getSpecificUserComponent(userComponentsId: Pick<userComponent, "id">): Promise<userComponent | undefined> {
     const result = await db.query.userComponents.findFirst({
         where: eq(userComponents.id, userComponentsId.id)
@@ -126,11 +138,14 @@ export async function acceptUserComponent(component: userComponent) {
     const currentLayout = component.nextLayout
     if (currentLayout === null) return
 
+    //delete folder if existing already
+    await deleteDirectory(path.join("userComponents", component.id))
+
     //write files to userfolder
     await recreateComponentFolderStructure(currentLayout.collection, "userComponents")
 
-    //update the globalcomponents obj
-    await appendGlobalComponentsFile(component.id)
+    //update the globalcomponents obj only when new
+    if (component.currentLayout === null) await appendGlobalComponentsFile(component.id)
 
     //change next layout to null, write to currentlayout
     await db.update(userComponents)
@@ -196,5 +211,38 @@ export async function appendGlobalComponentsFile(id: string) {//repalce with com
         console.error('Error appending record to dynamicComponents:', error);
     }
 }
+
+export async function removeIdFromGlobalComponentsFile(id: string) {
+    try {
+        const basePath = path.join(process.cwd(), "utility", "globalComponents.tsx");
+
+        let fileContent = await fs.readFile(basePath, 'utf8');
+
+        // Split the file content by lines
+        const lines = fileContent.split('\n');
+
+        // Find the index of the line that contains the ID
+        const index = lines.findIndex(line => line.includes(`"${id}":`));
+
+        if (index !== -1) {
+            // Remove the line containing the ID
+            lines.splice(index, 1);
+
+            // Join the lines back into a single string
+            fileContent = lines.join('\n');
+
+            // Write the modified content back to the file
+            await fs.writeFile(basePath, fileContent);
+
+            console.log(`Line containing ID "${id}" removed from globalComponents.tsx successfully.`);
+        } else {
+            console.log(`ID "${id}" not found in globalComponents.tsx.`);
+        }
+
+    } catch (error) {
+        console.error('Error removing line from globalComponents.tsx:', error);
+    }
+}
+
 
 

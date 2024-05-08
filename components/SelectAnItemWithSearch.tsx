@@ -11,6 +11,7 @@ export default function SelectAnItemWithSearch<T>({
     displaySearchResultFunction,
     findMoreButton,
     labelText,
+    searchingMultiple = false
 }: {
     chosenItemSetterFunction: (seenObj: T) => void;
     genralSearchFunction: () => Promise<T[]>;
@@ -18,6 +19,7 @@ export default function SelectAnItemWithSearch<T>({
     displaySearchResultFunction: (seenObj: T) => JSX.Element;
     findMoreButton: { link: string, text: string };
     labelText: [string, string];
+    searchingMultiple?: boolean
 }) {
     const [search, searchSet] = useState("")
     const [searchResults, searchResultsSet] = useState<T[]>([])
@@ -60,6 +62,7 @@ export default function SelectAnItemWithSearch<T>({
                             if (searchDebounce.current) clearTimeout(searchDebounce.current)
                             searchSet(e.target.value)
                             userSearchedOnceSet(true)
+
                             chosenItemSet(undefined)
 
 
@@ -74,10 +77,9 @@ export default function SelectAnItemWithSearch<T>({
                 <div style={{ display: "flex", gap: ".5rem", overflowX: "auto" }}>
                     {searchResults.map((eachResult, eachResultIndex) => {
                         return (
-                            <div key={eachResultIndex} className='smallButton' style={{ backgroundColor: chosenItem === eachResult ? "#000" : "" }}
-                                onClick={() => {
-                                    chosenItemSet(eachResult)
-                                }}>
+                            <div key={eachResultIndex} onClick={() => {
+                                chosenItemSet(eachResult)
+                            }}>
                                 {displaySearchResultFunction(eachResult)}
                             </div>
                         )
@@ -90,7 +92,7 @@ export default function SelectAnItemWithSearch<T>({
                     <h3>Not seeing any results</h3>
 
                     <button>
-                        <Link className='mainButton' href={findMoreButton.link} rel="noopener noreferrer" target="_blank" style={{ display: "inline-block", border: "1px solid red" }}>
+                        <Link className='smallButton' href={findMoreButton.link} rel="noopener noreferrer" target="_blank">
                             {findMoreButton.text}
                         </Link>
                     </button>

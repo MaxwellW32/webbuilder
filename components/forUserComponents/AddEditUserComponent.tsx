@@ -1,6 +1,6 @@
 "use client"
-import { addUserComponent, recreateComponentFolderStructure, updateUserComponent } from '@/serverFunctions/handleUserComponents';
-import { category, collection, layout, newUserComponent, newUserComponentSchema, prop, userComponent, userComponentSchema } from '@/types';
+import { addUserComponent, deleteUserComponent, removeIdFromGlobalComponentsFile, updateUserComponent } from '@/serverFunctions/handleUserComponents';
+import { category, collection, layout, newUserComponent, newUserComponentSchema, prop, theme, userComponent, userComponentSchema } from '@/types';
 import React, { useEffect, useMemo, useState } from 'react'
 import path from "path"
 import styles from "./addUserComponent.module.css"
@@ -13,6 +13,10 @@ import { getCategories, getSpecificCategory } from '@/serverFunctions/handleCate
 import { v4 as uuidV4 } from "uuid"
 import { getProps } from '@/serverFunctions/handleProps';
 import { addPropToUserComponent, getPropsFromUserComponent, removePropFromUserComponent } from '@/serverFunctions/handleUserComponentsToProps';
+import { addThemeToUserComponent, getThemesFromUserComponent, removeThemeFromUserComponent } from '@/serverFunctions/handleUserComponentsToThemes';
+import { deleteDirectory } from '@/serverFunctions/handleFiles';
+import { getSpecificTheme, getThemes } from '@/serverFunctions/handleThemes';
+import { useRouter } from 'next/navigation';
 
 export default function AddEditUserComponent({ passedUserComponent }: { passedUserComponent?: userComponent }) {
     const [initialForm,] = useState<newUserComponent | userComponent>(passedUserComponent ? { ...passedUserComponent } : {
@@ -24,10 +28,17 @@ export default function AddEditUserComponent({ passedUserComponent }: { passedUs
     })
     const [formObj, formObjSet] = useState({ ...initialForm })
 
+    const router = useRouter()
+
     const [formErrors, formErrorsSet] = useState<{ [key: string]: string | null }>({})
     const [userEdited, userEditedSet] = useState<{ [key: string]: boolean }>({})
 
+    const [userWantsToDelete, userWantsToDeleteSet] = useState(false)
+
     const [props, propsSet] = useState<prop[]>([])
+
+    const [themesBeingUsed, themesBeingUsedSet] = useState<theme[]>([])
+
     const { data: session } = useSession()
 
     //write userID
@@ -41,12 +52,26 @@ export default function AddEditUserComponent({ passedUserComponent }: { passedUs
         })
     }, [session])
 
-    //load props from server
+    //load props and themes / old themes being used from server
     useEffect(() => {
         if (!session) return
 
         const search = async () => {
             propsSet(await getProps())
+
+            //get current themes from server
+            if (passedUserComponent !== undefined) {
+                const userComponentsToThemes = await getThemesFromUserComponent({ id: formObj.id })
+
+                const seenThemes: theme[] = []
+                userComponentsToThemes.forEach(userComponentsToTheme => {
+                    if (userComponentsToTheme.theme) {
+                        seenThemes.push(userComponentsToTheme.theme)
+                    }
+                })
+
+                themesBeingUsedSet(seenThemes)
+            }
         }
         search()
     }, [])
@@ -183,15 +208,20 @@ export default function AddEditUserComponent({ passedUserComponent }: { passedUs
             if (!newUserComponentSchema.safeParse(formObj).success) return
 
             try {
-                const seenAddedUserComponent = await addUserComponent(formObj)
+                const addedUserComponent = await addUserComponent(formObj)
 
                 //add possible props to many many table
                 if (propsBeingUsed) {
                     await Promise.all(propsBeingUsed.map(async eachProp => {
-                        return await addPropToUserComponent({ id: eachProp.id }, { id: seenAddedUserComponent.id })
+                        return await addPropToUserComponent({ id: eachProp.id }, { id: addedUserComponent.id })
                     }))
+                }
 
-                    console.log(`$added props to component`);
+                if (themesBeingUsed.length > 0) {
+                    // 
+                    await Promise.all(themesBeingUsed.map(async eachTheme => {
+                        return await addThemeToUserComponent({ id: eachTheme.id }, { id: addedUserComponent.id })
+                    }))
                 }
 
                 formObjSet({ ...initialForm })
@@ -212,8 +242,6 @@ export default function AddEditUserComponent({ passedUserComponent }: { passedUs
 
                     return userEdited[seenKey]
                 }))
-
-                console.log(`$changedObjectFieldsOnly`, changedObjectFieldsOnly);
 
                 await updateUserComponent({ ...changedObjectFieldsOnly, userId: formObj.userId, id: formObj.id })
 
@@ -238,9 +266,6 @@ export default function AddEditUserComponent({ passedUserComponent }: { passedUs
                         }
                     })
 
-                    console.log(`$newPropIdsToAdd`, newPropIdsToAdd);
-                    console.log(`$propIdsToRemove`, propIdsToRemove);
-
                     //add all seen
                     await Promise.all(newPropIdsToAdd.map(async eachProp => {
                         return await addPropToUserComponent({ id: eachProp.id }, { id: formObj.id })
@@ -252,7 +277,37 @@ export default function AddEditUserComponent({ passedUserComponent }: { passedUs
                     }))
                 }
 
-                formObjSet({ ...initialForm })
+                if (userEdited["themes"] && themesBeingUsed.length > 0) {
+                    //get themes that were in use
+                    const oldThemesFromServer = await getThemesFromUserComponent({ id: formObj.id })
+
+                    const newThemeIdsToAdd: Pick<theme, "id">[] = []
+                    const themeIdsToRemove: Pick<theme, "id">[] = []
+
+                    oldThemesFromServer.forEach(eachOldTheme => {//remove
+                        const themeWasSeen = themesBeingUsed.find(eachCurrentTheme => eachCurrentTheme.id === eachOldTheme.themeId)
+                        if (themeWasSeen === undefined) {
+                            themeIdsToRemove.push({ id: eachOldTheme.themeId })
+                        }
+                    })
+
+                    themesBeingUsed.forEach(eachCurrentTheme => {//add
+                        const themeWasSeen = oldThemesFromServer.find(eachOldTheme => eachOldTheme.themeId === eachCurrentTheme.id)
+                        if (themeWasSeen === undefined) {
+                            newThemeIdsToAdd.push({ id: eachCurrentTheme.id })
+                        }
+                    })
+
+                    //add all seen
+                    await Promise.all(newThemeIdsToAdd.map(async eachTheme => {
+                        return await addThemeToUserComponent({ id: eachTheme.id }, { id: formObj.id })
+                    }))
+
+                    //remove all seen
+                    await Promise.all(themeIdsToRemove.map(async eachProp => {
+                        return await removeThemeFromUserComponent({ id: eachProp.id }, { id: formObj.id })
+                    }))
+                }
 
                 toast.success("submitted changes for review")
             } catch (error) {
@@ -264,7 +319,36 @@ export default function AddEditUserComponent({ passedUserComponent }: { passedUs
     };
 
     async function handleDelete() {
+        try {
+            //delete all many to many tables linked to user components first props - themes
+            //navigate home
+            if (!session) return toast.error("no user logged in to delete")
 
+            toast.success("deleting...")
+
+            const currentProps = await getPropsFromUserComponent({ id: formObj.id })
+            await Promise.all(currentProps.map(async eachProp => {
+                return await removePropFromUserComponent({ id: eachProp.propId }, { id: formObj.id })
+            }))
+
+            const currentThemes = await getThemesFromUserComponent({ id: formObj.id })
+            await Promise.all(currentThemes.map(async eachTheme => {
+                return await removeThemeFromUserComponent({ id: eachTheme.themeId }, { id: formObj.id })
+            }))
+
+            await removeIdFromGlobalComponentsFile(formObj.id)
+
+            await deleteDirectory(path.join("userComponents", formObj.id))
+
+            await deleteUserComponent({ id: formObj.id, userId: session.user.id })
+
+            toast.success("deleted component")
+
+            router.push("/")
+
+        } catch (error) {
+            console.log(`$error deleteing`, error);
+        }
     }
 
 
@@ -273,7 +357,24 @@ export default function AddEditUserComponent({ passedUserComponent }: { passedUs
             <section>
                 <h1>{passedUserComponent ? "Edit component" : "Upload a component"}</h1>
 
-                <button className='smallButton' onClick={handleDelete}>Delete Component</button>
+                {passedUserComponent && (
+                    <>
+                        {!userWantsToDelete ? (
+                            <button className='smallButton' onClick={() => {
+                                userWantsToDeleteSet(true)
+                            }}>Delete Component</button>
+                        ) : (
+                            <div>
+                                <p>Confirm Deletion</p>
+
+                                <div style={{ display: "flex", alignItems: 'center', gap: ".5rem", marginTop: ".5rem" }}>
+                                    <button className='mainButton' style={{ backgroundColor: "var(--color5)" }} onClick={() => (userWantsToDeleteSet(false))}>CANCEL</button>
+                                    <button className='smallButton' onClick={handleDelete}>CONFIRM</button>
+                                </div>
+                            </div>
+                        )}
+                    </>
+                )}
             </section>
 
             <form action={() => { }} className={styles.form}>
@@ -321,7 +422,7 @@ export default function AddEditUserComponent({ passedUserComponent }: { passedUs
                             <div style={{ display: "flex", gap: ".5rem", flexWrap: "wrap" }}>
                                 {formObj.nextLayout.collection.map((eachCollection, eachCollectionIndex) => {
                                     return (
-                                        <button className='smallButton' key={eachCollectionIndex} style={{ backgroundColor: eachCollection.relativePath === formObj.nextLayout!.mainFileName ? "#000" : "" }} onClick={() => {
+                                        <button className='smallButton' key={eachCollectionIndex} style={{ backgroundColor: eachCollection.relativePath === formObj.nextLayout!.mainFileName ? "var(--color5)" : "" }} onClick={() => {
                                             formObjSet(prevObj => {
                                                 const newObj = { ...prevObj }
                                                 if (newObj.nextLayout === null) {
@@ -340,12 +441,12 @@ export default function AddEditUserComponent({ passedUserComponent }: { passedUs
 
                         {propsBeingUsed && propsBeingUsed.length > 0 && (
                             <div>
-                                <label htmlFor="propsUsed">Global Props seen in default/main component</label>
+                                <label htmlFor="propsUsed">Global Props Seen</label>
 
                                 <div style={{ display: "flex", flexWrap: "wrap", gap: ".5rem" }}>
                                     {propsBeingUsed.map(eachProp => {
                                         return (
-                                            <div key={eachProp.id} style={{ fontWeight: "bold" }}>{eachProp.name}</div>
+                                            <button key={eachProp.id} className='smallButton'>{eachProp.name}</button>
                                         )
                                     })}
                                 </div>
@@ -369,7 +470,7 @@ export default function AddEditUserComponent({ passedUserComponent }: { passedUs
                         labelText={["Choose a layout category for this component", "layout category chosen"]}
 
                         displaySearchResultFunction={(seenObj) => {
-                            return <div>{seenObj.name}</div>
+                            return <div className='smallButton' style={{ backgroundColor: seenObj.id === formObj.categoryId ? "var(--color5)" : "" }}>{seenObj.name}</div>
                         }}
 
                         chosenItemSetterFunction={(seenObj) => {
@@ -394,9 +495,70 @@ export default function AddEditUserComponent({ passedUserComponent }: { passedUs
 
                         findMoreButton={{
                             text: "Suggest Some Categories",
-                            link: '/suggestions'
+                            link: '/suggestions?type=category'
                         }}
                     />
+                </div>
+
+                <div>
+                    {themesBeingUsed.length > 0 && (
+                        <label htmlFor="themesUsed">Themes in use</label>
+                    )}
+
+                    <SelectAnItemWithSearch
+                        labelText={["Choose themes for this component", ""]}
+
+                        displaySearchResultFunction={(seenObj) => {
+                            return <div className='smallButton' style={{}}>{seenObj.name}</div>
+                        }}
+
+                        chosenItemSetterFunction={(seenObj) => {
+                            themesBeingUsedSet(prevArr => {
+                                const newArr = themesBeingUsed.find(eachThemeInUse => eachThemeInUse.id === seenObj.id) === undefined ? [...prevArr, seenObj] : prevArr
+
+                                console.log(`$seenObj`, seenObj);
+                                return newArr
+                            })
+
+                            userEditedSet(prevObj => {
+                                const newObj = { ...prevObj }
+                                newObj["themes"] = true
+                                return newObj
+                            })
+                        }}
+
+                        genralSearchFunction={getThemes}
+
+                        specificSearchFunction={(search: string) => {
+                            return getSpecificTheme({ usingId: false, search: search })
+                        }}
+
+                        findMoreButton={{
+                            text: "Suggest Some Themes",
+                            link: '/suggestions?type=theme'
+                        }}
+
+                        searchingMultiple={true}
+                    />
+
+                    <div style={{ display: "flex", alignItems: "center", overflowX: "auto", gap: "1rem", marginTop: "1rem" }}>
+                        {themesBeingUsed.map(eachThemeInUse => {
+                            return (
+                                <button className="smallButton" style={{ backgroundColor: "var(--color5)" }} key={eachThemeInUse.id} onClick={() => {
+                                    themesBeingUsedSet(prev => {
+                                        const newArr = prev.filter(eachThemeSeen => eachThemeSeen.id !== eachThemeInUse.id)
+                                        return newArr
+                                    })
+
+                                    userEditedSet(prevObj => {
+                                        const newObj = { ...prevObj }
+                                        newObj["themes"] = true
+                                        return newObj
+                                    })
+                                }}>{eachThemeInUse.name}</button>
+                            )
+                        })}
+                    </div>
                 </div>
 
                 <button className='mainButton' type="submit" onClick={() => handleSubmit(true)} disabled={!newUserComponentSchema.safeParse(formObj).success}>Submit</button>

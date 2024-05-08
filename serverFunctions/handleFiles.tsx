@@ -16,7 +16,8 @@ export async function checkIfFileExists(filePath: string) {
     }
 }
 
-
-
-
-//check for basefilename from path
+export async function deleteDirectory(filePath: string) {
+    console.log(`$called to delete`, filePath);
+    const fullPath = path.join(process.cwd(), filePath)
+    await fs.rm(fullPath, { force: true, recursive: true })
+}

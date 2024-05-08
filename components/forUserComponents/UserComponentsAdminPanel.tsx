@@ -45,6 +45,8 @@ export default function UserComponentsAdminPanel() {
                         {unnaprovedUserComponents.map(eachUserComponent => {
                             return (
                                 <div key={eachUserComponent.id} style={{ display: "grid", gap: "1rem", backgroundColor: "var(--gray2)", paddingBottom: "1rem" }}>
+                                    <h2 style={{ textAlign: "center" }}>Name: {eachUserComponent.name}</h2>
+
                                     {eachUserComponent.nextLayout!.collection.map((eachCollection, eachCollectionIndex) => {
                                         return (
                                             <div key={eachCollectionIndex} style={{ color: "#fff", }}>

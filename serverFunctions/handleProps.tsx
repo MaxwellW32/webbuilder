@@ -6,7 +6,6 @@ import { authOptions } from "@/lib/auth";
 import { newProp, newPropsSchema, prop, propsSchema } from "@/types";
 import { props } from "@/db/schema";
 
-//remedy when users working
 export async function addProp(newProp: newProp) {
     const session = await getServerSession(authOptions)
     if (!session) throw new Error("not signed in")

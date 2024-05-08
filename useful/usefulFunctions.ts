@@ -1,4 +1,5 @@
 import path from "path"
+import fs from "fs/promises"
 
 export function replaceBaseFolderNameInPath(stringToReplaceWith: string, filePath: string) {
     const splitArr = filePath.split(/[\/\\]/)
@@ -16,3 +17,4 @@ export function getPathBaseName(filePath: string) {
 export function normalizeFilePathToForwardSlashes(filePath: string) {
     return filePath.replace(/\\/g, '/');
 }
+

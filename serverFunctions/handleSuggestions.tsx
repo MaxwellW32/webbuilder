@@ -1,6 +1,6 @@
 "use server"
 import { db } from "@/db";
-import { eq, ilike, and } from "drizzle-orm";
+import { eq, ilike, and, asc } from "drizzle-orm";
 
 
 import { getServerSession } from "next-auth";
@@ -27,6 +27,7 @@ export async function getSuggestions(seenLimit = 50, seenOffset = 0): Promise<su
     const results = await db.query.suggestions.findMany({
         limit: seenLimit,
         offset: seenOffset,
+        orderBy: asc(suggestions.datePosted)
     });
 
     return results

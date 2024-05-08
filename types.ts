@@ -33,7 +33,8 @@ export type userComponent = z.infer<typeof userComponentSchema> & {
     fromUser?: user,
     fromCategory?: category,
     comments?: comment[],
-    userComponentsToProps?: userComponentsToProps[]
+    userComponentsToProps?: userComponentsToProp[],
+    userComponentsToThemes?: userComponentsToTheme[],
 }
 
 export const newUserComponentSchema = userComponentSchema.omit({ likes: true, saves: true, currentLayout: true })
@@ -55,11 +56,28 @@ export const propsSchema = z.object({
     obj: z.record(z.any()),
 })
 export type prop = z.infer<typeof propsSchema> & {
-    userComponentsToProps?: userComponentsToProps[]
+    userComponentsToProps?: userComponentsToProp[]
 }
 
 export const newPropsSchema = propsSchema.omit({ id: true })
 export type newProp = z.infer<typeof newPropsSchema>
+
+
+
+
+
+
+
+export const themesSchema = z.object({
+    id: z.number(),
+    name: z.string().min(1),
+})
+export type theme = z.infer<typeof themesSchema> & {
+    userComponentsToThemes?: userComponentsToTheme[],
+}
+
+export const newThemeSchema = themesSchema.omit({ id: true })
+export type newTheme = z.infer<typeof newThemeSchema>
 
 
 
@@ -117,7 +135,7 @@ export type newCategory = z.infer<typeof newCategoriesSchema>
 export const commentsSchema = z.object({
     id: z.number(),
     userId: z.string().min(1),
-    componentId: z.string().min(1),
+    userComponentId: z.string().min(1),
     likes: z.number(),
     datePosted: z.date(),
     message: z.string().min(1),
@@ -137,7 +155,7 @@ export type newComment = z.infer<typeof newCommentsSchema>
 
 
 
-export const suggestionTypeSchema = z.enum(["category", "prop"])
+export const suggestionTypeSchema = z.enum(["category", "prop", "theme"])
 export type suggestionType = z.infer<typeof suggestionTypeSchema>
 
 
@@ -146,14 +164,13 @@ export const suggestionsSchema = z.object({
     userId: z.string().min(1),
     type: suggestionTypeSchema,
     suggestion: z.string().min(1),
-    accepted: z.boolean(),
     datePosted: z.date(),
 })
 export type suggestion = z.infer<typeof suggestionsSchema> & {
     fromUser?: user,
 }
 
-export const newSuggestionsSchema = suggestionsSchema.omit({ id: true, accepted: true, datePosted: true })
+export const newSuggestionsSchema = suggestionsSchema.omit({ id: true, datePosted: true })
 export type newSuggestion = z.infer<typeof newSuggestionsSchema>
 
 
@@ -177,11 +194,6 @@ export type usersToLikedComments = z.infer<typeof usersToLikedCommentsSchema> & 
 
 
 
-// {
-//     userComponentId: string;
-//     propId: number;
-// }
-
 
 
 export const userComponentsToPropsSchema = z.object({
@@ -189,9 +201,22 @@ export const userComponentsToPropsSchema = z.object({
     propId: z.number(),
     upToDate: z.boolean()
 })
-export type userComponentsToProps = z.infer<typeof userComponentsToPropsSchema> & {
+export type userComponentsToProp = z.infer<typeof userComponentsToPropsSchema> & {
     userComponent?: userComponent,
     prop?: prop,
+}
+
+
+
+
+
+export const userComponentsToThemesSchema = z.object({
+    userComponentId: z.string().min(1),
+    themeId: z.number(),
+})
+export type userComponentsToTheme = z.infer<typeof userComponentsToThemesSchema> & {
+    userComponent?: userComponent,
+    theme?: theme,
 }
 
 

@@ -124,6 +124,7 @@ button:disabled {
   border: 2px solid transparent;
   scale: 1;
   letter-spacing: 1px;
+  user-select: none;
 }
 
 .mainButton:hover {
@@ -145,6 +146,7 @@ button:disabled {
   transition: background-color 200ms;
   display: flex;
   gap: .5rem;
+  user-select: none;
 }
 
 .smallButton:hover {
@@ -160,7 +162,8 @@ button:disabled {
   padding: .5rem 1rem;
   font-size: var(--smallFontSize);
   border-radius: .5rem;
-  cursor: pointer
+  cursor: pointer;
+  user-select: none;
 }
 
 

@@ -184,10 +184,14 @@ export default function AddOrEditProp({ seenProp }: { seenProp?: prop }) {
 
                         <button className='mainButton' type="submit" onClick={() => handleSubmit(true)} disabled={!newPropsSchema.safeParse(formObj).success}>Submit</button>
                     </form>
+
+                    {seenProp !== undefined && (
+                        <button style={{ justifySelf: "center" }} className='smallButton' onClick={() => { wantsToAddPropSet(false) }}>Cancel Editing</button>
+                    )}
                 </>
             ) : (
                 <>
-                    <button className='mainButton' onClick={() => { wantsToAddPropSet(true) }}>{seenProp ? `Edit prop ${seenProp.name}` : `Add a prop`}</button>
+                    <button className='smallButton' onClick={() => { wantsToAddPropSet(true) }}>{seenProp ? `Edit prop ${seenProp.name}` : `Add a prop`}</button>
                 </>
             )}
         </main>

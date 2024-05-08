@@ -32,6 +32,7 @@ export const componentsRelations = relations(userComponents, ({ many, one }) => 
     }),
     comments: many(comments),
     userComponentsToProps: many(userComponentsToProps),
+    userComponentsToThemes: many(userComponentsToThemes),
 }));
 
 
@@ -64,6 +65,28 @@ export const propsRelations = relations(props, ({ many }) => ({
 
 
 
+
+
+
+
+
+
+
+
+
+
+export const themes = pgTable("themes", {
+    id: serial("id").notNull().primaryKey(),
+    name: varchar("name", { length: 255 }).notNull().unique(),
+},
+    (table) => {
+        return {
+            themeNameIndex: index("themeNameIndex").on(table.name),
+        };
+    })
+export const themesRelations = relations(themes, ({ many }) => ({
+    userComponentsToThemes: many(userComponentsToThemes),
+}));
 
 
 
@@ -161,18 +184,18 @@ export const categoriesRelations = relations(categories, ({ many, one }) => ({
 
 
 
-export const suggestionsTypeEnum = pgEnum('type', ['category', "prop"]);
+export const suggestionsTypeEnum = pgEnum('type', ['category', "prop", "theme"]);
 
 export const suggestions = pgTable("suggestions", {
     id: serial("id").notNull().primaryKey(),
     type: suggestionsTypeEnum("type").notNull(),
     suggestion: varchar("suggestion", { length: 255 }).notNull(),
     userId: varchar("userId", { length: 255 }).notNull().references(() => users.id),
-    accepted: boolean("accepted").notNull().default(false),
     datePosted: date('datePosted', { mode: "date" }).notNull().defaultNow(),
 },
     (table) => {
         return {
+            suggestionDatePostedIndex: index("suggestionDatePostedIndex").on(table.datePosted),
         };
     })
 export const suggestionsRelations = relations(suggestions, ({ one }) => ({
@@ -195,14 +218,14 @@ export const suggestionsRelations = relations(suggestions, ({ one }) => ({
 export const comments = pgTable("comments", {
     id: serial("id").notNull().primaryKey(),
     userId: varchar("userId", { length: 255 }).notNull().references(() => users.id),
-    componentId: varchar("componentId", { length: 255 }).notNull().references(() => userComponents.id),
+    userComponentId: varchar("userComponentId", { length: 255 }).notNull().references(() => userComponents.id),
     datePosted: date('datePosted', { mode: "date" }).notNull().defaultNow(),
     message: varchar("message", { length: 255 }).notNull(),
     likes: integer("likes").notNull().default(0),
 },
     (table) => {
         return {
-            componentIdIndex: index("componentIdIndex").on(table.componentId),
+            userComponentIdIndex: index("userComponentIdIndex").on(table.userComponentId),
             componentLikesIndex: index("componentLikesIndex").on(table.likes),
         }
     });
@@ -212,7 +235,7 @@ export const commentsRelations = relations(comments, ({ one, many }) => ({
         references: [users.id],
     }),
     fromComponent: one(userComponents, {
-        fields: [comments.componentId],
+        fields: [comments.userComponentId],
         references: [userComponents.id],
     }),
     usersToLikedComments: many(usersToLikedComments),
@@ -280,6 +303,35 @@ export const userComponentsToPropsRelations = relations(userComponentsToProps, (
     prop: one(props, {
         fields: [userComponentsToProps.propId],
         references: [props.id],
+    }),
+}));
+
+
+
+
+
+
+
+
+
+
+
+
+export const userComponentsToThemes = pgTable('userComponentsToThemes', {
+    userComponentId: varchar("userComponentId", { length: 255 }).notNull().references(() => userComponents.id),
+    themeId: serial('themeId').notNull().references(() => themes.id),
+}, (t) => ({
+    pk: primaryKey({ columns: [t.userComponentId, t.themeId] }),
+}),
+);
+export const userComponentsToThemesRelations = relations(userComponentsToThemes, ({ one }) => ({
+    userComponent: one(userComponents, {
+        fields: [userComponentsToThemes.userComponentId],
+        references: [userComponents.id],
+    }),
+    theme: one(themes, {
+        fields: [userComponentsToThemes.themeId],
+        references: [themes.id],
     }),
 }));
 

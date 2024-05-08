@@ -39,18 +39,21 @@ export default async function Page() {
             <section>
                 <h3>Add to Site</h3>
 
-                <section>
+                <section style={{ display: "grid", gap: "1rem" }}>
                     <h3>Handle Props</h3>
 
                     <AddOrEditProp />
 
-                    <div style={{ display: "grid", gap: ".5rem", padding: "1rem" }}>
+                    <div className='noScrollBar' style={{ display: "flex", overflowX: "auto", gap: ".5rem" }}>
                         {seenProps.map(eachProp => {
                             return (
-                                <AddOrEditProp key={eachProp.id} seenProp={eachProp} />
+                                <div style={{ flexShrink: 0 }}>
+                                    <AddOrEditProp key={eachProp.id} seenProp={eachProp} />
+                                </div>
                             )
                         })}
                     </div>
+
                 </section>
             </section>
         </main>
